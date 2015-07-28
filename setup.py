@@ -29,7 +29,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author="Marek Wywiał",
     author_email='onjinx@gmail.com',
-    url='https://github.com/onjin/parcelbright',
+    url='https://github.com/onjin/parcelbright-python',
     packages=[
         'parcelbright',
     ],
