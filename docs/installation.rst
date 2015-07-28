@@ -4,7 +4,7 @@ Installation
 
 At the command line::
 
-    $ pip parcelbright
+    $ pip install parcelbright
 
 Or, if you have virtualenvwrapper installed::
 
