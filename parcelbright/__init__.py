@@ -166,10 +166,12 @@ class Entity(object):
         """Returns `Entity` dictionary for existing, public, not `None`
         attributes"""
 
-        return {
-            k: v for k, v in self.__dict__.items()
-            if v is not None and not k.startswith('_')
-        }
+        result = {}
+        for k, v in self.__dict__.items():
+            if v is None or k.startswith('_'):
+                continue
+            result[k] = v
+        return result
 
 
 class Parcel(Entity):

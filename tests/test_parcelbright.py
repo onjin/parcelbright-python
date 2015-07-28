@@ -13,6 +13,9 @@ import unittest
 
 import parcelbright
 
+if not hasattr(unittest, 'skipUnless'):
+    import unittest2 as unittest
+
 
 class TestParcelBright(unittest.TestCase):
 
