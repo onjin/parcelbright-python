@@ -231,7 +231,8 @@ class Shipment(Entity):
 
     def book(self, rate_code):
         self.__dict__.update(
-            Client(api_key, sandbox).get(
-                'shipments/{}/book'.format(self.id)
+            Client(api_key, sandbox).post(
+                'shipments/{}/book'.format(self.id),
+                data=json.dumps({'rate_code': rate_code})
             ).json()['shipment']
         )
