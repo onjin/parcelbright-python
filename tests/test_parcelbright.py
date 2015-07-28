@@ -85,7 +85,10 @@ class TestParcelBright(unittest.TestCase):
             parcelbright.Shipment.find('invalid')
 
         found_shipment.book(found_shipment.rates[0]['code'])
-        self.assertIn('label', found_shipment.__dict__)
+        self.assertTrue(found_shipment.is_booked())
+
+        events = found_shipment.track()
+        self.assertEqual(len(events), 1)
 
 
 if __name__ == '__main__':

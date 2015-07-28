@@ -25,7 +25,7 @@ base_url = 'https://api.parcelbright.com/'
 sandbox_base_url = 'https://api.sandbox.parcelbright.com/'
 
 
-class ParcelBrightException(Exception):
+class ParcelBrightAPIException(Exception):
     """ParcelBright errors Base
 
     Args:
@@ -38,12 +38,12 @@ class ParcelBrightException(Exception):
         self.response = response
 
 
-class NotFound(ParcelBrightException):
+class NotFound(ParcelBrightAPIException):
     """Raised when server response id 404"""
     pass
 
 
-class BadRequest(ParcelBrightException):
+class BadRequest(ParcelBrightAPIException):
     """Raised when server response id 400"""
     pass
 
@@ -238,3 +238,20 @@ class Shipment(Entity):
                 data=json.dumps({'rate_code': rate_code})
             ).json()['shipment']
         )
+
+    def is_booked(self):
+        return 'consignment' in self.__dict__
+
+    def track(self, refresh=False):
+        if not self.is_booked():
+            raise ValueError('''
+            Missing `shipment.consignment` value. You have to run
+            `shipment.book()` first''')
+
+        if 'events' not in self.__dict__ or refresh:
+            self.__dict__.update(
+                Client(api_key, sandbox).get(
+                    'shipments/{}/track'.format(self.id)
+                ).json()
+            )
+        return self.events
