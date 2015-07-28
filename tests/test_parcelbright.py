@@ -77,6 +77,7 @@ class TestParcelBright(unittest.TestCase):
             to_address=to_address
         )
         self.assertTrue(isinstance(shipment.rates, list))
+        self.assertEqual(shipment.state, 'incomplete')
 
         found_shipment = parcelbright.Shipment.find(shipment.id)
         self.assertEqual(shipment.id, found_shipment.id)
@@ -86,10 +87,13 @@ class TestParcelBright(unittest.TestCase):
 
         found_shipment.book(found_shipment.rates[0]['code'])
         self.assertTrue(found_shipment.is_booked())
+        self.assertEqual(found_shipment.state, 'completed')
 
         events = found_shipment.track()
         self.assertEqual(len(events), 1)
 
+        found_shipment.cancel()
+        self.assertEqual(found_shipment.state, 'cancelled')
 
 if __name__ == '__main__':
     unittest.main()

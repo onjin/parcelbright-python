@@ -9,9 +9,7 @@ ParcelBrigh API wrapper
         :target: https://pypi.python.org/pypi/parcelbright
 
 
-ParcelBright API wrapper
-
-**WORK IN PROGRESS**
+ParcelBright API wrapper. For full ParcelBright API reference go to https://github.com/parcelbright/api-docs
 
 * Free software: BSD license
 * Documentation: https://parcelbright-python.readthedocs.org.
@@ -21,12 +19,12 @@ Features
 
 * create new shipment to get rates from
 * find previously created shipment
-* book created or found shipment
+* book shipment
+* get tracking data
+* cancel shipment
 
 TODO
 ----
 
-* Track shipment
-* Return shipment
-* Void shipment
-* Reschedule shipment
+* Customs support
+* Carriers liability support

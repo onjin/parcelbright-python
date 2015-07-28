@@ -44,3 +44,10 @@ To use ParcelBrigh API wrapper in a project::
     print shipment.label
     print shipment.consignment
     print shipment.confirmation_number
+
+    # Get tracking data
+    tracking = shipment.track()
+    print tracking
+
+    # Cancell shipment
+    shipment.cancel()

@@ -7,7 +7,7 @@ import requests
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 # configuration
@@ -98,6 +98,10 @@ class Client(object):
             self.config['base_url'] = sandbox_base_url
         else:
             self.config['base_url'] = sandbox_base_url
+
+    @classmethod
+    def instance(cls, **kwargs):
+        return Client(api_key, sandbox, **kwargs)
 
     def set_headers(self):
         self.requester.headers.update(self.config.get('headers'))
@@ -221,19 +225,19 @@ class Shipment(Entity):
 
     @classmethod
     def create(cls, **kwargs):
-        return cls(**Client(api_key, sandbox).post(
+        return cls(**Client.instance().post(
             'shipments', data=json.dumps({'shipment': todict(kwargs)})
         ).json()['shipment'])
 
     @classmethod
     def find(cls, id):
-        return cls(**Client(api_key, sandbox).get(
+        return cls(**Client.instance().get(
             'shipments/{}'.format(id),
         ).json()['shipment'])
 
     def book(self, rate_code):
         self.__dict__.update(
-            Client(api_key, sandbox).post(
+            Client.instance().post(
                 'shipments/{}/book'.format(self.id),
                 data=json.dumps({'rate_code': rate_code})
             ).json()['shipment']
@@ -250,8 +254,16 @@ class Shipment(Entity):
 
         if 'events' not in self.__dict__ or refresh:
             self.__dict__.update(
-                Client(api_key, sandbox).get(
+                Client.instance().get(
                     'shipments/{}/track'.format(self.id)
                 ).json()
             )
         return self.events
+
+    def cancel(self):
+        Client.instance().post(
+            'shipments/{}/cancel'.format(self.id)
+        )
+        self.__dict__.update(
+            Shipment.find(self.id).__dict__
+        )
