@@ -7,7 +7,7 @@ import requests
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 # configuration
@@ -25,7 +25,16 @@ base_url = 'https://api.parcelbright.com/'
 sandbox_base_url = 'https://api.sandbox.parcelbright.com/'
 
 
-class ParcelBrightAPIException(Exception):
+class ParcelBrightException(Exception):
+    pass
+
+
+class ShipmentNotCompletedException(ParcelBrightException):
+    """Raised when `Shipment.state` is different than `completed`"""
+    pass
+
+
+class ParcelBrightAPIException(ParcelBrightException):
     """ParcelBright errors Base
 
     Args:
@@ -222,6 +231,8 @@ class Shipment(Entity):
         self.pickup_date = pickup_date
         self.liability_amount = liability_amount
         self.__dict__.update(kwargs)
+        if not hasattr(self, 'state'):
+            self.state = 'unknown'
 
     @classmethod
     def create(cls, **kwargs):
@@ -243,12 +254,9 @@ class Shipment(Entity):
             ).json()['shipment']
         )
 
-    def is_booked(self):
-        return 'consignment' in self.__dict__
-
     def track(self, refresh=False):
-        if not self.is_booked():
-            raise ValueError('''
+        if not self.state == 'completed':
+            raise ShipmentNotCompletedException('''
             Missing `shipment.consignment` value. You have to run
             `shipment.book()` first''')
 

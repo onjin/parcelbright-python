@@ -47,6 +47,31 @@ class TestParcelBright(unittest.TestCase):
             'phone': '12341234', 'country_code': 'GB', 'line1': 'line'
         })
 
+    def test_known_exceptions(self):
+        parcel = parcelbright.Parcel(
+            length=10, width=10, height=10, weight=1
+        )
+        from_address = parcelbright.Address(
+            name="office", postcode="NW1 0DU",
+            town="London", phone="07800000000",
+            line1="19 Mandela Street",
+            country_code="GB"
+        )
+        to_address = parcelbright.Address(
+            name="John Doe", postcode="E2 8RS",
+            town="London", phone="07411111111",
+            line1="19 Mandela Street",
+            country_code="GB"
+        )
+        shipment = parcelbright.Shipment(
+            customer_reference='123455667', estimated_value=100,
+            contents='books', pickup_date='2025-01-29',
+            parcel=parcel, from_address=from_address,
+            to_address=to_address
+        )
+        with self.assertRaises(parcelbright.ShipmentNotCompletedException):
+            shipment.track()
+
     @unittest.skipUnless(
         'PARCELBRIGHT_TEST_API_KEY' in os.environ,
         """Skip integrations test unless environment variable
@@ -86,7 +111,6 @@ class TestParcelBright(unittest.TestCase):
             parcelbright.Shipment.find('invalid')
 
         found_shipment.book(found_shipment.rates[0]['code'])
-        self.assertTrue(found_shipment.is_booked())
         self.assertEqual(found_shipment.state, 'completed')
 
         events = found_shipment.track()
