@@ -7,7 +7,7 @@ import requests
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 
 # configuration
@@ -201,6 +201,9 @@ class Parcel(Entity):
         self.height = height
         self.weight = weight
 
+    def __repr__(self):
+        return r'<Parcel [width={0.width}, height={0.height}, length={0.length}, weight={0.weight}]>'.format(self)  # NOQA
+
 
 class Address(Entity):
 
@@ -219,6 +222,9 @@ class Address(Entity):
         self.phone = phone
         self.company = company
 
+    def __repr__(self):
+        return r'<Address [name={0.name}, postcode={0.postcode}, town={0.town}, line1={0.line1}, country_code={0.country_code}]>'.format(self)  # NOQA
+
 
 class Shipment(Entity):
     def __init__(
@@ -226,6 +232,11 @@ class Shipment(Entity):
         to_address, from_address, customs_form=None, pickup_date=None,
         liability_amount=None, **kwargs
     ):
+        # defaults
+        self.id = None
+        self.state = 'unknown'
+
+        # passed
         self.customer_reference = customer_reference
         self.contents = contents
         self.estimated_value = estimated_value
@@ -236,8 +247,9 @@ class Shipment(Entity):
         self.pickup_date = pickup_date
         self.liability_amount = liability_amount
         self.__dict__.update(kwargs)
-        if not hasattr(self, 'state'):
-            self.state = 'unknown'
+
+    def __repr__(self):
+        return r'<Shipment [id={0.id}, contents={0.contents}, state={0.state}]>'.format(self)  # NOQA
 
     @classmethod
     def create(cls, **kwargs):
@@ -251,12 +263,19 @@ class Shipment(Entity):
             'shipments/{}'.format(id),
         ).json()['shipment'])
 
-    def book(self, rate_code):
+    def book(self, rate_code, pickup_date=None):
+        data = {
+            'rate_code': rate_code,
+        }
+        if pickup_date:
+            data['pickup_date'] = pickup_date
+
+        Client.instance().post(
+            'shipments/{}/book'.format(self.id),
+            data=json.dumps(data)
+        )
         self.__dict__.update(
-            Client.instance().post(
-                'shipments/{}/book'.format(self.id),
-                data=json.dumps({'rate_code': rate_code})
-            ).json()['shipment']
+            Shipment.find(self.id).__dict__
         )
 
     def track(self, refresh=False):

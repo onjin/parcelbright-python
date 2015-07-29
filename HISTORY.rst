@@ -3,6 +3,12 @@
 History
 -------
 
+0.2.3 (2015-07-29)
+---------------------
+
+* Support for `pickup_date` parameter at `Shipment.book()` method
+* Added `__repr__` method to `Parcel`, `Address` and `Shipment` entities
+
 0.2.2 (2015-07-29)
 ---------------------
 
