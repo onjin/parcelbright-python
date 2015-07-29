@@ -7,7 +7,7 @@ import requests
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 # configuration
@@ -48,12 +48,17 @@ class ParcelBrightAPIException(ParcelBrightException):
 
 
 class NotFound(ParcelBrightAPIException):
-    """Raised when server response id 404"""
+    """Raised when server response is 404"""
     pass
 
 
 class BadRequest(ParcelBrightAPIException):
-    """Raised when server response id 400"""
+    """Raised when server response is 400"""
+    pass
+
+
+class TrackingError(BadRequest):
+    """Raised when `Shipment.track()` responses with 400"""
     pass
 
 
@@ -261,11 +266,15 @@ class Shipment(Entity):
             `shipment.book()` first''')
 
         if 'events' not in self.__dict__ or refresh:
-            self.__dict__.update(
-                Client.instance().get(
-                    'shipments/{}/track'.format(self.id)
-                ).json()
-            )
+            try:
+                self.__dict__.update(
+                    Client.instance().get(
+                        'shipments/{}/track'.format(self.id)
+                    ).json()
+                )
+            except BadRequest as e:
+                raise TrackingError(e.message, e.response)
+
         return self.events
 
     def cancel(self):

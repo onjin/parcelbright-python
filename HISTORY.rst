@@ -3,6 +3,12 @@
 History
 -------
 
+0.2.2 (2015-07-29)
+---------------------
+
+* Raise `TrackingError` from `Shipment.track()` if shipment has not tracking
+  information available
+
 0.2.1 (2015-07-29)
 ---------------------
 

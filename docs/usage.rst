@@ -41,9 +41,9 @@ To use ParcelBrigh API wrapper in a project::
     # Book created or found shipment
     shipment.book(rate_code='N')
 
-    print shipment.label
+    print shipment.label_url
     print shipment.consignment
-    print shipment.confirmation_number
+    print shipment.pickup_confirmation
 
     # Get tracking data
     tracking = shipment.track()

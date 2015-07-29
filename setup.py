@@ -24,7 +24,7 @@ test_requirements = [
 
 setup(
     name='parcelbright',
-    version='0.2.1',
+    version='0.2.2',
     description="ParcelBright API wrapper",
     long_description=readme + '\n\n' + history,
     author="Marek Wywiał",
