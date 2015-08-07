@@ -3,6 +3,13 @@
 History
 -------
 
+0.3.0 (2015-08-07)
+------------------
+
+* API CHANGED - Entities constructor takes `dict` instead of `kwargs`
+* API CHANGED - `Shipment.create` becames instance method instead of class method
+* Added entities validation using `schematics` package
+
 0.2.3 (2015-07-29)
 ---------------------
 

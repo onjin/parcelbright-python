@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from dateutil.parser import parse as date_parse
+import datetime
+import logging
 import json
 import requests
+
+from schematics import types
+from schematics.exceptions import ConversionError
+from schematics.types.compound import ModelType, ListType
+from schematics.models import Model
 
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.2.3'
+__version__ = '0.3.0'
 
 
 # configuration
@@ -25,7 +33,26 @@ base_url = 'https://api.parcelbright.com/'
 sandbox_base_url = 'https://api.sandbox.parcelbright.com/'
 
 
+class DateTimeType(types.DateTimeType):
+
+    def to_native(self, value, context=None):
+        if isinstance(value, datetime.datetime):
+            return value
+
+        try:
+            return date_parse(value)
+        except (ValueError, TypeError):
+            message = self.messages['parse'].format(value)
+            raise ConversionError(message)
+
+
 class ParcelBrightException(Exception):
+    pass
+
+
+class ValidationError(ParcelBrightException):
+    """Raised when parcelbright entity like Address, Parcel or Shipment
+    is invalid"""
     pass
 
 
@@ -124,7 +151,15 @@ class Client(object):
         request = '{}{}'.format(
             self.config['base_url'], request
         )
+        logging.debug(r'{}:{} -> {}'.format(
+            verb, request, kwargs
+        ))
         response = self.requester.request(verb, request, **kwargs)
+        logging.debug(r'{}:{} <- {}'.format(
+            verb, request, {
+                'status_code': response.status_code,
+            }
+        ))
         ParcelBrightError(response).process()
         return response
 
@@ -157,109 +192,86 @@ class Client(object):
         return self.request('head', request, **kwargs)
 
 
-def todict(obj):
-    """Transforms `Entity` or embedded in dictionary `Entities` into plain
-    dictionary
-
-    Args:
-        obj: `Entity` or dictionary
-    Returns:
-        A plain dictionary of public attributes from `Entity`
-    """
-
-    try:
-        return obj.dict()
-    except AttributeError:
-        result = {}
-        for k, v in obj.items():
-            try:
-                result[k] = v.dict()
-            except AttributeError:
-                result[k] = v
-        return result
-
-
-class Entity(object):
-    def dict(self):
-        """Returns `Entity` dictionary for existing, public, not `None`
-        attributes"""
-
-        result = {}
-        for k, v in self.__dict__.items():
-            if v is None or k.startswith('_'):
-                continue
-            result[k] = v
-        return result
-
-
-class Parcel(Entity):
+class Parcel(Model):
     """Parcel container"""
-
-    def __init__(self, length, width, height, weight):
-        self.length = length
-        self.width = width
-        self.height = height
-        self.weight = weight
+    length = types.DecimalType(min_value=0, required=True)
+    width = types.DecimalType(min_value=0, required=True)
+    height = types.DecimalType(min_value=0, required=True)
+    weight = types.DecimalType(min_value=0, required=True)
 
     def __repr__(self):
         return r'<Parcel [width={0.width}, height={0.height}, length={0.length}, weight={0.weight}]>'.format(self)  # NOQA
 
 
-class Address(Entity):
+class Address(Model):
 
     """Address"""
-
-    def __init__(
-            self, name, postcode, town, line1, phone, country_code, line2=None,
-            company=None
-    ):
-        self.name = name
-        self.postcode = postcode
-        self.town = town
-        self.country_code = country_code
-        self.line1 = line1
-        self.line2 = line2
-        self.phone = phone
-        self.company = company
+    name = types.StringType(required=True, min_length=1)
+    postcode = types.StringType(required=True, min_length=1)
+    town = types.StringType(required=True, min_length=1)
+    country_code = types.StringType(required=True, min_length=2, max_length=2)
+    line1 = types.StringType(required=True, min_length=1)
+    line2 = types.StringType(required=False)
+    phone = types.StringType(required=True, regex='\d+')
+    company = types.StringType(required=True, min_length=1)
 
     def __repr__(self):
         return r'<Address [name={0.name}, postcode={0.postcode}, town={0.town}, line1={0.line1}, country_code={0.country_code}]>'.format(self)  # NOQA
 
 
-class Shipment(Entity):
-    def __init__(
-        self, customer_reference, contents, estimated_value, parcel,
-        to_address, from_address, customs_form=None, pickup_date=None,
-        liability_amount=None, **kwargs
-    ):
-        # defaults
-        self.id = None
-        self.state = 'unknown'
+class ShipmentRate(Model):
+    code = types.StringType(required=True)
+    name = types.StringType(required=True)
+    carrier = types.StringType(required=True)
+    service_type = types.StringType(required=True)
+    price = types.DecimalType(required=True)
+    vat = types.DecimalType(required=True)
+    pickup_date = types.DateType(required=True)
+    transit_days = types.IntType(required=True)
+    cutoff = DateTimeType(required=True)
+    delivery_estimate = DateTimeType(required=True)
 
-        # passed
-        self.customer_reference = customer_reference
-        self.contents = contents
-        self.estimated_value = estimated_value
-        self.parcel = parcel
-        self.to_address = to_address
-        self.from_address = from_address
-        self.customs_form = customs_form
-        self.pickup_date = pickup_date
-        self.liability_amount = liability_amount
-        self.__dict__.update(kwargs)
+
+class ShipmentService(Model):
+    code = types.StringType(required=True)
+    name = types.StringType(required=True)
+    price = types.DecimalType(required=True)
+    carrier = types.StringType(required=True)
+    service_type = types.StringType(required=True)
+    vat = types.DecimalType(required=True)
+
+
+class Shipment(Model):
+    id = types.StringType(required=False)
+    state = types.StringType(required=False, default='unknown')
+    customer_reference = types.StringType(required=True)
+    contents = types.StringType(required=True)
+    estimated_value = types.DecimalType(min_value=0)
+    pickup_date = types.DateType()
+    parcel = ModelType(Parcel)
+    to_address = ModelType(Address)
+    from_address = ModelType(Address)
+    liability_amount = types.DecimalType()
+    pickup_confirmation = types.StringType()
+    service = ModelType(ShipmentService)
+    customs = types.StringType()
+    customs_url = types.URLType()
+    consignment = types.StringType()
+    label_url = types.URLType()
+    rates = ListType(ModelType(ShipmentRate))
 
     def __repr__(self):
         return r'<Shipment [id={0.id}, contents={0.contents}, state={0.state}]>'.format(self)  # NOQA
 
-    @classmethod
-    def create(cls, **kwargs):
-        return cls(**Client.instance().post(
-            'shipments', data=json.dumps({'shipment': todict(kwargs)})
-        ).json()['shipment'])
+    def create(self):
+        result = Client.instance().post(
+            'shipments', data=json.dumps({'shipment': self.to_primitive()})
+        ).json()['shipment']
+        return self.import_data(result)
 
     @classmethod
     def find(cls, id):
-        return cls(**Client.instance().get(
+        return Shipment.from_flat(Client.instance().get(
             'shipments/{}'.format(id),
         ).json()['shipment'])
 
@@ -274,8 +286,8 @@ class Shipment(Entity):
             'shipments/{}/book'.format(self.id),
             data=json.dumps(data)
         )
-        self.__dict__.update(
-            Shipment.find(self.id).__dict__
+        self.import_data(
+            Shipment.find(self.id).flatten()
         )
 
     def track(self, refresh=False):

@@ -1,2 +1,4 @@
 wheel==0.23.0
+schematics
 requests[security]
+python-dateutil
