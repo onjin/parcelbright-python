@@ -16,6 +16,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'requests',
+    'schematics',
 ]
 
 test_requirements = [
@@ -24,7 +25,7 @@ test_requirements = [
 
 setup(
     name='parcelbright',
-    version='0.3.0',
+    version='0.3.1',
     description="ParcelBright API wrapper",
     long_description=readme + '\n\n' + history,
     author="Marek Wywiał",

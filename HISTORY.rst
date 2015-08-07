@@ -3,6 +3,11 @@
 History
 -------
 
+0.3.1 (2015-08-07)
+------------------
+
+* Added missing `schematics` requirements at `setup.py`
+
 0.3.0 (2015-08-07)
 ------------------
 

@@ -15,7 +15,7 @@ from schematics.models import Model
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 
 # configuration
