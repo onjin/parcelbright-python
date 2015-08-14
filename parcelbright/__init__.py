@@ -15,7 +15,7 @@ from schematics.models import Model
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 
 # configuration
@@ -241,6 +241,13 @@ class ShipmentService(Model):
     vat = types.DecimalType(required=True)
 
 
+class ShipmentTrack(Model):
+    timestamp = types.DateType()
+    location = types.StringType(required=False)
+    description = types.StringType(required=False)
+    detail = types.StringType(required=False)
+
+
 class Shipment(Model):
     id = types.StringType(required=False)
     state = types.StringType(required=False, default='unknown')
@@ -259,6 +266,7 @@ class Shipment(Model):
     consignment = types.StringType()
     label_url = types.URLType()
     rates = ListType(ModelType(ShipmentRate))
+    track = ListType(ModelType(ShipmentTrack))
 
     def __repr__(self):
         return r'<Shipment [id={0.id}, contents={0.contents}, state={0.state}]>'.format(self)  # NOQA
