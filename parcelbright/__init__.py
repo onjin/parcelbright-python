@@ -15,7 +15,7 @@ from schematics.models import Model
 
 __author__ = 'Marek Wywiał'
 __email__ = 'onjinx@gmail.com'
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 
 # configuration
@@ -165,27 +165,27 @@ class Client(object):
 
     def get(self, request, **kwargs):
         response = self.request('get', request, **kwargs)
-        assert response.status_code == 200
+        # assert response.status_code == 200
         return response
 
     def post(self, request, **kwargs):
         response = self.request('post', request, **kwargs)
-        assert response.status_code == 201
+        # assert response.status_code == 201
         return response
 
     def patch(self, request, **kwargs):
         response = self.request('patch', request, **kwargs)
-        assert response.status_code == 200
+        # assert response.status_code == 200
         return response
 
     def put(self, request, **kwargs):
         response = self.request('put', request, **kwargs)
-        assert response.status_code == 200
+        # assert response.status_code == 200
         return response
 
     def delete(self, request, **kwargs):
         response = self.request('delete', request, **kwargs)
-        assert response.status_code == 204
+        # assert response.status_code == 204
         return response
 
     def head(self, request, **kwargs):
